@@ -2,7 +2,7 @@
    ----------------------------------------------------------------------------
    TECHNOLARP - https://technolarp.github.io/
    SERRURE MEDFAN 02 - https://github.com/technolarp/serrure_medfan_02
-   version 1.0 - 09/2023
+   version 1.1.0 - 05/2025
    ----------------------------------------------------------------------------
 */
 
@@ -30,7 +30,7 @@
 */
 
 /*
-TODO version 1.1
+TODO version 1.2.0
 
 ajouter du son
 ajouter une commande d'actionneur
@@ -141,7 +141,7 @@ void setup()
   Serial.println(F("----------------------------------------------------------------------------"));
   Serial.println(F("TECHNOLARP - https://technolarp.github.io/"));
   Serial.println(F("SERRURE MEDFAN 02 - https://github.com/technolarp/serrure_mefan_02"));
-  Serial.println(F("version 1.0 - 09/2023"));
+  Serial.println(F("version 1.1.0 - 05/2025"));
   Serial.println(F("----------------------------------------------------------------------------"));
   
   // I2C RESET
