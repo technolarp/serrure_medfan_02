@@ -1,9 +1,15 @@
 # serrure_medfan_02
-Cet objet simule une serrure d'aspect magique qui s'ouvre et se ferme à l'aide d'un code qui doit être réalisé en activant des capteurs reed avec un aimant. Les capteurs sont cachés sous des glyphes illuminés par des leds RGB. Le code est enregistré en mémoire. De nombreux paramètres sont configurables via un back office accessible en wifi. La logique du code est assez simple est peut-être facilement trouvée par essais successifs. par exemple, avec 4 capteurs reed, il y a 4*3*2*1 combinaison possibles, soit seulement 24 combinaisons à essayer avant de trouver la bonne.
+Cet objet simule une serrure d'aspect magique qui s'ouvre et se ferme à l'aide d'un code qui doit être réalisé en activant des capteurs reed avec un aimant. Les capteurs sont cachés sous des glyphes illuminés par des led RGB. Le code est enregistré en mémoire. De nombreux paramètres sont configurables via un back office accessible en wifi. Cette version est plus difficilement hackable car le nombre de combinaison est beaucoup plus important
 
-Dans la configuration “usine”, la serrure fonctionne de la façon suivante. Il y a 4 glyphes composés de 4 capteurs magnétiques et 4 groupes de 2 leds. Pour ouvrir ou fermer la serrure, il faut trouver la bonne séquence d’activation pour chaque glyphe. Chaque glyphe doit être activé une seule fois et passant un aimant près du capteur magnétique.
 
-Si le glyphe est correct, il s’illume en jaune et il faut tenter de trouver le suivant. Si le glyphe n’est pas le bon, tous les glyphes déjà activés sont désactivés et il faut refaire la séquence depuis le début.
+Dans la configuration “usine”, la serrure fonctionne de la façon suivante. Il y a 4 glyphes composés de 4 capteurs magnétiques et 4 groupes de 2 leds. Pour ouvrir ou fermer la serrure, il faut trouver la bonne séquence d’activation pour chaque glyphe. Chaque glyphe doit être activé une ou plusieurs fois avec un aimant afin de le positionner sur une des couleurs possibles (entre 1 et 5). Une fois tous les glyphes activés, la serrure attend un bref instant puis vérifie sila combinaison est la bonne. 
+
+
+Si c’est le cas, la serrure change d’état (ouverte <==> fermée). Sinon, les glyphes sont tous désactivés et il faut recommencer depuis le début.
+
+
+Le nombre de combinaisons est plus important que celui de la serrure medfan 01. Par exemple, 4 glyphes avec 3 couleurs possibles donnent 4^3  = 64 combinaisons.
+
 
 
 
@@ -93,28 +99,34 @@ Pour installer le firmware de l'objet, il faut suivre ce [tutorial](https://gith
 ## BackOffice
 Pour se connecter au back office de l'objet, il faut suivre ce [tutorial](https://github.com/technolarp/technolarp.github.io/wiki/Connexion-au-back-office-de-l'objet-via-le-wifi)  
 
-<img width="608" height="922" alt="serrure_medfan_back-office" src="https://github.com/user-attachments/assets/53296d62-3844-4aaf-b9e3-07d6e23bd710" />
+<img width="755" height="772" alt="serrure_medfan_02_backoffice" src="https://github.com/user-attachments/assets/3f6ab737-dcf7-4f1b-a97d-2ac76c0b27d5" />
+
 
 ## Paramètres de gameplay
 
+Ces paramètres permettent de contrôler le gameplay de l’objet.
+
+
+
 | Nom         | Descriptif                                                                                                                         |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Object name**         | Le nom de l’objet, composé de 1 à 20 lettres et chiffres                                                                                                                         |
-| **Object ID**           | Un numéro d’identification de l’objet                                                                                                                                            |
-| **Group ID**            | Un numéro d’identification du groupe de l’objet                                                                                                                                  |
-| **nbSegments**          | Le nombre de segments du panneau. Un segment est un groupe de 1 à 5 leds. Nombre entre 1 et 20.                                                                                  |
-| **ledParSegment**       | Le nombre de leds groupées pour chaque segment du panneau. Entre 1 et 5                                                                                                          |
-| **ActiveLeds**          | Le nombre total de leds utilisées par le panneau. Ce chiffre est calculé automatiquement (= nbColonnes X nbSegments). Il ne doit pas dépasser 25                                 |
-| **Brightness**          | La luminosité des leds, entre 0 (éteinte) et 255 (pleine intensité)                                                                                                              |
-| **Scintillement**       | Le scintillement permet d’activer le scintillement des leds pour un effet visuel plus ou moins rapide. le slider permet de régler la vitesse du scintillement                    |
-| **couleurs fermée**     | Choix de la couleur quand la serrure est fermée                                                                                                                                  |
-| **couleurs ouverte**    | Choix de la couleur quand la serrure est ouverte                                                                                                                                 |
-| **couleurs transition** | Choix de la couleur qui indique si un glyphe a été activé                                                                                                                        |
-| **Taille code**         | Le nombre de glyphe à activer pour ouvrir la serrure. entre 1 et nbSegments. Les boutons permettent de réinitialiser le code à 1-2-3-4… ou de mettre un code aléatoire           |
-| **Code**                | la séquence qui permet de fermer ou ouvrir la serrure. Dans cet exemple, il faudra activer le capteur reed n°2, puis n°0, puis n°1 et enfin n°3 pour ouvrir ou fermer la serrure |
-| **statut Panneau**      | le statut actuel de l’objet. Il peut être  OUVERTE FERMEE OUVERTURE Les 3 boutons permettent de forcer l’état de la serrure                                                      |
-| **Timeout Reset**       | le délai après lequel les glyphes activés sont éteints automatiquement                                                                                                           |
-| **Debounce Time**       | un paramètre à n pas modifier                                                                                                                                                    |
+| Object name      | Le nom de l’objet, composé de 1 à 20 lettres et chiffres                                                                                                                                                                                                  |
+| Object ID        | Un numéro d’identification de l’objet                                                                                                                                                                                                                     |
+| Group ID         | Un numéro d’identification du groupe de l’objet                                                                                                                                                                                                           |
+| nbSegments       | Le nombre de segments du panneau. Un segment est un groupe de 1 à 5 leds. Nombre entre 1 et 20.                                                                                                                                                           |
+| ledParSegment    | Le nombre de leds groupées pour chaque segment du panneau. Entre 1 et 5                                                                                                                                                                                   |
+| ActiveLeds       | Le nombre total de leds utilisées par le panneau. Ce chiffre est calculé automatiquement (= nbColonnes X nbSegments). Il ne doit pas dépasser 25                                                                                                          |
+| Brightness       | La luminosité des leds, entre 0 (éteinte) et 255 (pleine intensité)                                                                                                                                                                                       |
+| Scintillement    | Le scintillement permet d’activer le scintillement des leds pour un effet visuel plus ou moins rapide. le slider permet de régler la vitesse du scintillement                                                                                             |
+| Nombre couleurs  | Le nombre de couleurs possible pour chaque groupe de leds. entre 1 et 5                                                                                                                                                                                   |
+| Couleurs         | Le choix de chaque couleurs (est égal au nombre de couleurs)                                                                                                                                                                                              |
+| couleurs fermée  | Choix de la couleur quand la serrure est fermée                                                                                                                                                                                                           |
+| couleurs ouverte | Choix de la couleur quand la serrure est ouverte                                                                                                                                                                                                          |
+| Manage Code      | Ces 2 boutons permettent de remettre le code par défaut ou de le choisir de façon aléatoire                                                                                                                                                               |
+| Code             | La séquence qui permet de fermer ou ouvrir la serrure. On commence à compter à partir de zéro. Dans l’exemple du webUI au dessus, Il faut positionner le glyphe 0 sur le bleu foncé, le glyphe 1 sur blanc, le glyphe 2 sur jaune et le glyphe 3 sur cyan |
+| statut Panneau   | le statut actuel de l’objet. Il peut être  OUVERTE FERMEE OUVERTURE Les 3 boutons permettent de forcer l’état de la serrure                                                                                                                               |
+| Timeout Reset    | le délai après lequel les glyphes activés sont éteints automatiquement                                                                                                                                                                                    |
+| Debounce Time    | un paramètre à n pas modifier                                                                                                                                                                                                                             |
 ## Paramètres Réseau
 
 Pour avoir le descriptif des paramètres réseau suivez ce [lien](https://github.com/technolarp/technolarp.github.io/wiki/Param%C3%A8tres-R%C3%A9seau)  
