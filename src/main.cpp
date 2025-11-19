@@ -656,6 +656,9 @@ void handleWebsocketBuffer()
           strlcpy(  aConfig.objectConfig.objectName,
                     doc["new_objectName"],
                     sizeof(aConfig.objectConfig.objectName));
+
+          
+          checkCharacter(aConfig.objectConfig.objectName, listeCheck, '_');
   
           writeObjectConfigFlag = true;
           sendObjectConfigFlag = true;
