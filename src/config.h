@@ -235,7 +235,7 @@ class M_config
       objectConfig.statutPrecedent = 0;
       
       objectConfig.timeoutReset = 5000;
-      objectConfig.debounceTime = 300;
+      objectConfig.debounceTime = 200;
       
       objectConfig.timeoutCheck = 3000;
       

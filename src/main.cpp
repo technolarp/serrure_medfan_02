@@ -536,8 +536,15 @@ void checkReed()
   // un reed a été activé, on change la couleur du glyphe
   if (lastPin>-1)
   {
-    codeSerrureActuel[lastPin]+=1;
-    codeSerrureActuel[lastPin]%=aConfig.objectConfig.nbCouleurs;
+    if (codeSerrureActuel[lastPin]>=aConfig.objectConfig.nbCouleurs)
+    {
+      codeSerrureActuel[lastPin]=0;
+    }
+    else
+    {
+      codeSerrureActuel[lastPin]+=1;
+      codeSerrureActuel[lastPin]%=aConfig.objectConfig.nbCouleurs;
+    }
     
     previousMillisCheck = millis();
     previousMillisReset = previousMillisCheck;
@@ -602,14 +609,13 @@ void checkReed()
         Serial.println(F("code OK"));
         aConfig.objectConfig.statutPrecedent=aConfig.objectConfig.statutActuel;
         aConfig.objectConfig.statutActuel=OBJET_OUVERTURE;
-        
       }
       else
       {
         Serial.println(F("code faux"));
       }
       uneFois = true;
-      
+
       glypheAll=false;
       glypheOneTime=true;
     }
@@ -734,235 +740,249 @@ void handleWebsocketBuffer()
     // **********************************************
     if (doc["new_objectName"].is<const char*>())
     {
-      strlcpy(aConfig.objectConfig.objectName,
-        doc["new_objectName"],
-        sizeof(aConfig.objectConfig.objectName));
-        
-        // lowercase
-        for (uint8_t i = 0; i < sizeof(aConfig.objectConfig.objectName); i++)
-        {
-          aConfig.objectConfig.objectName[i] = tolower(aConfig.objectConfig.objectName[i]);
-        }
-        
-        // check character
-        char const * listeCheck = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-";
-        checkCharacter(aConfig.objectConfig.objectName, listeCheck, '-');
-        
-        writeObjectConfigFlag = true;
-        sendObjectConfigFlag = true;
+      strlcpy(aConfig.objectConfig.objectName, doc["new_objectName"], sizeof(aConfig.objectConfig.objectName));
+      
+      // lowercase
+      for (uint8_t i = 0; i < sizeof(aConfig.objectConfig.objectName); i++)
+      {
+        aConfig.objectConfig.objectName[i] = tolower(aConfig.objectConfig.objectName[i]);
       }
       
-      if (doc["new_objectId"].is<unsigned short>()) 
-      {
-        uint16_t tmpValeur = doc["new_objectId"];
-        aConfig.objectConfig.objectId = checkValeur(tmpValeur,1,1000);
-        
-        writeObjectConfigFlag = true;
-        sendObjectConfigFlag = true;
-      }
+      // check character
+      char const * listeCheck = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-";
+      checkCharacter(aConfig.objectConfig.objectName, listeCheck, '-');
       
-      if (doc["new_groupId"].is<unsigned short>()) 
-      {
-        uint16_t tmpValeur = doc["new_groupId"];
-        aConfig.objectConfig.groupId = checkValeur(tmpValeur,1,1000);
-        
-        writeObjectConfigFlag = true;
-        sendObjectConfigFlag = true;
-      }
+      writeObjectConfigFlag = true;
+      sendObjectConfigFlag = true;
+    }
+    
+    if (doc["new_objectId"].is<unsigned short>()) 
+    {
+      uint16_t tmpValeur = doc["new_objectId"];
+      aConfig.objectConfig.objectId = checkValeur(tmpValeur,1,1000);
       
-      if (doc["new_activeLeds"].is<unsigned short>()) 
-      {
-        FastLED.clear(); 
-        
-        uint16_t tmpValeur = doc["new_activeLeds"];
-        aConfig.objectConfig.activeLeds = checkValeur(tmpValeur,1,NB_LEDS_MAX);
-        uneFois=true;
-        
-        writeObjectConfigFlag = true;
-        sendObjectConfigFlag = true;
-      }
+      writeObjectConfigFlag = true;
+      sendObjectConfigFlag = true;
+    }
+    
+    if (doc["new_groupId"].is<unsigned short>()) 
+    {
+      uint16_t tmpValeur = doc["new_groupId"];
+      aConfig.objectConfig.groupId = checkValeur(tmpValeur,1,1000);
       
-      if (doc["new_brightness"].is<unsigned short>())
+      writeObjectConfigFlag = true;
+      sendObjectConfigFlag = true;
+    }
+    
+    if (doc["new_activeLeds"].is<unsigned short>()) 
+    {
+      FastLED.clear(); 
+      
+      uint16_t tmpValeur = doc["new_activeLeds"];
+      aConfig.objectConfig.activeLeds = checkValeur(tmpValeur,1,NB_LEDS_MAX);
+      uneFois=true;
+      
+      writeObjectConfigFlag = true;
+      sendObjectConfigFlag = true;
+    }
+    
+    if (doc["new_brightness"].is<unsigned short>())
+    {
+      uint16_t tmpValeur = doc["new_brightness"];
+      aConfig.objectConfig.brightness = checkValeur(tmpValeur,0,255);
+      FastLED.setBrightness(aConfig.objectConfig.brightness);
+      uneFois=true;
+      
+      writeObjectConfigFlag = true;
+      sendObjectConfigFlag = true;
+    }
+    
+    if (doc["new_intervalScintillement"].is<unsigned short>())
+    {
+      uint16_t tmpValeur = doc["new_intervalScintillement"];
+      aConfig.objectConfig.intervalScintillement = checkValeur(tmpValeur,0,1000);
+      aFastled.setIntervalControlBrightness(aConfig.objectConfig.intervalScintillement);
+      
+      writeObjectConfigFlag = true;
+      sendObjectConfigFlag = true;
+    }
+    
+    if (doc["new_scintillementOnOff"].is<unsigned short>())
+    {
+      uint16_t tmpValeur = doc["new_scintillementOnOff"];
+      aConfig.objectConfig.scintillementOnOff = checkValeur(tmpValeur,0,1);
+      aFastled.setControlBrightness(aConfig.objectConfig.scintillementOnOff);
+      
+      if (aConfig.objectConfig.scintillementOnOff == 0)
       {
-        uint16_t tmpValeur = doc["new_brightness"];
-        aConfig.objectConfig.brightness = checkValeur(tmpValeur,0,255);
         FastLED.setBrightness(aConfig.objectConfig.brightness);
-        uneFois=true;
-        
-        writeObjectConfigFlag = true;
-        sendObjectConfigFlag = true;
       }
       
-      if (doc["new_intervalScintillement"].is<unsigned short>())
+      writeObjectConfigFlag = true;
+      sendObjectConfigFlag = true;
+    }
+    
+    if (doc["new_nbCouleurs"].is<unsigned short>())
+    {
+      uint16_t tmpValeur = doc["new_nbCouleurs"];
+      aConfig.objectConfig.nbCouleurs = checkValeur(tmpValeur,1,5);
+      
+      writeObjectConfigFlag = true;
+      sendObjectConfigFlag = true;
+    }
+    
+    if (doc["new_couleurs"].is<JsonVariant>()) 
+    {
+      JsonArray newCouleur = doc["new_couleurs"];
+      
+      uint8_t i = newCouleur[0];
+      char newColorStr[8];
+      strncpy(newColorStr, newCouleur[1], 8);
+      
+      uint8_t r;
+      uint8_t g;
+      uint8_t b;
+      
+      convertStrToRGB(newColorStr, &r, &g, &b);
+      aConfig.objectConfig.couleurs[i].red=r;
+      aConfig.objectConfig.couleurs[i].green=g;
+      aConfig.objectConfig.couleurs[i].blue=b;
+      
+      writeObjectConfigFlag = true;
+      sendObjectConfigFlag = true;
+    }
+    
+    if (doc["new_nbSegments"].is<unsigned short>())
+    {
+      uint16_t tmpValeur = doc["new_nbSegments"];
+      aConfig.objectConfig.nbSegments = checkValeur(tmpValeur,1,10);
+      aConfig.objectConfig.activeLeds = aConfig.objectConfig.nbSegments * aConfig.objectConfig.ledParSegment;
+      aFastled.setNbLed(aConfig.objectConfig.activeLeds);
+      aFastled.allLedOff(false);
+      
+      uneFois=true;
+      
+      writeObjectConfigFlag = true;
+      sendObjectConfigFlag = true;
+    }
+    
+    if (doc["new_ledParSegment"].is<unsigned short>())
+    {
+      uint16_t tmpValeur = doc["new_ledParSegment"];
+      aConfig.objectConfig.ledParSegment = checkValeur(tmpValeur,1,5);
+      aConfig.objectConfig.activeLeds = aConfig.objectConfig.nbSegments * aConfig.objectConfig.ledParSegment;
+      aFastled.setNbLed(aConfig.objectConfig.activeLeds);
+      aFastled.allLedOff(false);
+      
+      uneFois=true;
+      
+      writeObjectConfigFlag = true;
+      sendObjectConfigFlag = true;
+    }
+    
+    if (doc["new_code"].is<JsonVariant>())
+    {
+      JsonArray newCodeToSet = doc["new_code"];
+      
+      uint8_t nouvellePosition = newCodeToSet[0];
+      uint8_t nouvelleValeur = newCodeToSet[1];
+      
+      aConfig.objectConfig.code[nouvellePosition]=nouvelleValeur;
+      
+      writeObjectConfigFlag = true;
+      sendObjectConfigFlag = true;
+    }
+    
+    if ( doc["new_resetCode"].is<JsonVariant>() && doc["new_resetCode"]==1 )
+    {
+      for (uint8_t i=0;i<MAX_SIZE_CODE;i++)
       {
-        uint16_t tmpValeur = doc["new_intervalScintillement"];
-        aConfig.objectConfig.intervalScintillement = checkValeur(tmpValeur,0,1000);
-        aFastled.setIntervalControlBrightness(aConfig.objectConfig.intervalScintillement);
-        
-        writeObjectConfigFlag = true;
-        sendObjectConfigFlag = true;
+        aConfig.objectConfig.code[i] = 0;
       }
       
-      if (doc["new_scintillementOnOff"].is<unsigned short>())
+      writeObjectConfigFlag = true;
+      sendObjectConfigFlag = true;
+    }
+    
+    if ( doc["new_aleatCode"].is<JsonVariant>() && doc["new_aleatCode"]==1 )
+    {
+      for (uint8_t i=0;i<aConfig.objectConfig.nbSegments;i++)
       {
-        uint16_t tmpValeur = doc["new_scintillementOnOff"];
-        aConfig.objectConfig.scintillementOnOff = checkValeur(tmpValeur,0,1);
-        aFastled.setControlBrightness(aConfig.objectConfig.scintillementOnOff);
-        
-        if (aConfig.objectConfig.scintillementOnOff == 0)
-        {
-          FastLED.setBrightness(aConfig.objectConfig.brightness);
-        }
-        
-        writeObjectConfigFlag = true;
-        sendObjectConfigFlag = true;
+        uint8_t aRandom = random(0,(aConfig.objectConfig.nbCouleurs*10)-1);
+        aRandom /= 10;
+        aConfig.objectConfig.code[i]=aRandom;
       }
       
-      if (doc["new_nbCouleurs"].is<unsigned short>())
-      {
-        uint16_t tmpValeur = doc["new_nbCouleurs"];
-        aConfig.objectConfig.nbCouleurs = checkValeur(tmpValeur,1,5);
-        
-        writeObjectConfigFlag = true;
-        sendObjectConfigFlag = true;
-      }
+      writeObjectConfigFlag = true;
+      sendObjectConfigFlag = true;
+    }
+    
+    if (doc["new_timeoutCheck"].is<unsigned short>())
+    {
+      uint16_t tmpValeur = doc["new_timeoutCheck"];
+      aConfig.objectConfig.timeoutCheck = checkValeur(tmpValeur,1000,10000);
       
-      if (doc["new_couleurs"].is<JsonVariant>()) 
-      {
-        JsonArray newCouleur = doc["new_couleurs"];
-        
-        uint8_t i = newCouleur[0];
-        char newColorStr[8];
-        strncpy(newColorStr, newCouleur[1], 8);
-        
-        uint8_t r;
-        uint8_t g;
-        uint8_t b;
-        
-        convertStrToRGB(newColorStr, &r, &g, &b);
-        aConfig.objectConfig.couleurs[i].red=r;
-        aConfig.objectConfig.couleurs[i].green=g;
-        aConfig.objectConfig.couleurs[i].blue=b;
-        
-        writeObjectConfigFlag = true;
-        sendObjectConfigFlag = true;
-      }
+      writeObjectConfigFlag = true;
+      sendObjectConfigFlag = true;
+    }
+    
+    if (doc["new_timeoutReset"].is<unsigned short>())
+    {
+      uint16_t tmpValeur = doc["new_timeoutReset"];
+      aConfig.objectConfig.timeoutReset = checkValeur(tmpValeur,1000,30000);
       
-      if (doc["new_nbSegments"].is<unsigned short>())
-      {
-        uint16_t tmpValeur = doc["new_nbSegments"];
-        aConfig.objectConfig.nbSegments = checkValeur(tmpValeur,1,10);
-        aConfig.objectConfig.activeLeds = aConfig.objectConfig.nbSegments * aConfig.objectConfig.ledParSegment;
-        aFastled.setNbLed(aConfig.objectConfig.activeLeds);
-        aFastled.allLedOff(false);
-        
-        uneFois=true;
-        
-        writeObjectConfigFlag = true;
-        sendObjectConfigFlag = true;
-      }
+      writeObjectConfigFlag = true;
+      sendObjectConfigFlag = true;
+    }
+    
+    if (doc["new_debounceTime"].is<unsigned short>())
+    {
+      uint16_t tmpValeur = doc["new_debounceTime"];
+      aConfig.objectConfig.debounceTime = checkValeur(tmpValeur,50,1000);
       
-      if (doc["new_ledParSegment"].is<unsigned short>())
-      {
-        uint16_t tmpValeur = doc["new_ledParSegment"];
-        aConfig.objectConfig.ledParSegment = checkValeur(tmpValeur,1,5);
-        aConfig.objectConfig.activeLeds = aConfig.objectConfig.nbSegments * aConfig.objectConfig.ledParSegment;
-        aFastled.setNbLed(aConfig.objectConfig.activeLeds);
-        aFastled.allLedOff(false);
-        
-        uneFois=true;
-        
-        writeObjectConfigFlag = true;
-        sendObjectConfigFlag = true;
-      }
+      writeObjectConfigFlag = true;
+      sendObjectConfigFlag = true;
+    }
+    
+    if (doc["new_statutActuel"].is<unsigned short>())
+    {
+      aConfig.objectConfig.statutPrecedent=aConfig.objectConfig.statutActuel;
       
-      if (doc["new_code"].is<JsonVariant>())
-      {
-        JsonArray newCodeToSet = doc["new_code"];
-        
-        uint8_t nouvellePosition = newCodeToSet[0];
-        uint8_t nouvelleValeur = newCodeToSet[1];
-        
-        aConfig.objectConfig.code[nouvellePosition]=nouvelleValeur;
-        
-        writeObjectConfigFlag = true;
-        sendObjectConfigFlag = true;
-      }
+      uint16_t tmpValeur = doc["new_statutActuel"];
+      aConfig.objectConfig.statutActuel=tmpValeur;
       
-      if ( doc["new_resetCode"].is<JsonVariant>() && doc["new_resetCode"]==1 )
-      {
-        for (uint8_t i=0;i<MAX_SIZE_CODE;i++)
-        {
-          aConfig.objectConfig.code[i] = 0;
-        }
-        
-        writeObjectConfigFlag = true;
-        sendObjectConfigFlag = true;
-      }
+      uneFois=true;
       
-      if ( doc["new_aleatCode"].is<JsonVariant>() && doc["new_aleatCode"]==1 )
-      {
-        for (uint8_t i=0;i<aConfig.objectConfig.nbSegments;i++)
-        {
-          uint8_t aRandom = random(0,(aConfig.objectConfig.nbCouleurs*10)-1);
-          aRandom /= 10;
-          aConfig.objectConfig.code[i]=aRandom;
-        }
-        
-        writeObjectConfigFlag = true;
-        sendObjectConfigFlag = true;
-      }
+      writeObjectConfigFlag = true;
+      sendObjectConfigFlag = true;
+    }
+    
+    // **********************************************
+    // modif network config
+    if (doc["new_active"].is<JsonVariant>())
+    {
+      JsonArray newActive = doc["new_active"];
       
-      if (doc["new_timeoutCheck"].is<unsigned short>())
-      {
-        uint16_t tmpValeur = doc["new_timeoutCheck"];
-        aConfig.objectConfig.timeoutCheck = checkValeur(tmpValeur,1000,10000);
-        
-        writeObjectConfigFlag = true;
-        sendObjectConfigFlag = true;
-      }
+      uint8_t x = checkValeur(newActive[0], 0, WIFI_CLIENTS - 1);
+      uint8_t y = checkValeur(newActive[1], 0, 1);
       
-      if (doc["new_timeoutReset"].is<unsigned short>())
-      {
-        uint16_t tmpValeur = doc["new_timeoutReset"];
-        aConfig.objectConfig.timeoutReset = checkValeur(tmpValeur,1000,30000);
-        
-        writeObjectConfigFlag = true;
-        sendObjectConfigFlag = true;
-      }
+      aConfig.networkConfig.active[x] = y;
       
-      if (doc["new_debounceTime"].is<unsigned short>())
-      {
-        uint16_t tmpValeur = doc["new_debounceTime"];
-        aConfig.objectConfig.debounceTime = checkValeur(tmpValeur,50,1000);
-        
-        writeObjectConfigFlag = true;
-        sendObjectConfigFlag = true;
-      }
+      writeNetworkConfigFlag = true;
+      sendNetworkConfigFlag = true;
       
-      if (doc["new_statutActuel"].is<unsigned short>())
-      {
-        aConfig.objectConfig.statutPrecedent=aConfig.objectConfig.statutActuel;
-        
-        uint16_t tmpValeur = doc["new_statutActuel"];
-        aConfig.objectConfig.statutActuel=tmpValeur;
-        
-        uneFois=true;
-        
-        writeObjectConfigFlag = true;
-        sendObjectConfigFlag = true;
-      }
+      // update statut
+      uneFois = true;
+    }
+    
+    if (doc["new_ssid"].is<JsonVariant>())
+    {
+      JsonArray newSsid = doc["new_ssid"];
       
-      // **********************************************
-      // modif network config
-      if (doc["new_active"].is<JsonVariant>())
-      {
-        JsonArray newActive = doc["new_active"];
-        
-        uint8_t x = checkValeur(newActive[0], 0, WIFI_CLIENTS - 1);
-        uint8_t y = checkValeur(newActive[1], 0, 1);
-        
-        aConfig.networkConfig.active[x] = y;
+      uint8_t x = checkValeur(newSsid[0], 0, WIFI_CLIENTS - 1);
+      strlcpy(aConfig.networkConfig.ssid[x],
+        newSsid[1],
+        sizeof(aConfig.networkConfig.ssid[x]));
         
         writeNetworkConfigFlag = true;
         sendNetworkConfigFlag = true;
@@ -971,14 +991,14 @@ void handleWebsocketBuffer()
         uneFois = true;
       }
       
-      if (doc["new_ssid"].is<JsonVariant>())
+      if (doc["new_password"].is<JsonVariant>())
       {
-        JsonArray newSsid = doc["new_ssid"];
+        JsonArray newPassword = doc["new_password"];
         
-        uint8_t x = checkValeur(newSsid[0], 0, WIFI_CLIENTS - 1);
-        strlcpy(aConfig.networkConfig.ssid[x],
-          newSsid[1],
-          sizeof(aConfig.networkConfig.ssid[x]));
+        uint8_t x = checkValeur(newPassword[0], 0, WIFI_CLIENTS - 1);
+        strlcpy(aConfig.networkConfig.password[x],
+          newPassword[1],
+          sizeof(aConfig.networkConfig.password[x]));
           
           writeNetworkConfigFlag = true;
           sendNetworkConfigFlag = true;
@@ -987,92 +1007,96 @@ void handleWebsocketBuffer()
           uneFois = true;
         }
         
-        if (doc["new_password"].is<JsonVariant>())
+        if (doc["new_wifiConnectDelay"].is<unsigned short>())
         {
-          JsonArray newPassword = doc["new_password"];
+          uint16_t tmpValeur = doc["new_wifiConnectDelay"];
+          aConfig.networkConfig.wifiConnectDelay = checkValeur(tmpValeur, 1, 255);
           
-          uint8_t x = checkValeur(newPassword[0], 0, WIFI_CLIENTS - 1);
-          strlcpy(aConfig.networkConfig.password[x],
-            newPassword[1],
-            sizeof(aConfig.networkConfig.password[x]));
+          writeNetworkConfigFlag = true;
+          sendNetworkConfigFlag = true;
+        }
+        
+        if (doc["new_disableSsid"].is<unsigned short>())
+        {
+          uint16_t tmpValeur = doc["new_disableSsid"];
+          aConfig.networkConfig.disableSsid = checkValeur(tmpValeur, 0, 1);
+          
+          writeNetworkConfigFlag = true;
+          sendNetworkConfigFlag = true;
+        }
+        
+        if (doc["new_rebootEsp"].is<unsigned short>())
+        {
+          uint16_t tmpValeur = doc["new_rebootEsp"];
+          aConfig.networkConfig.rebootEsp = checkValeur(tmpValeur, 0, 1);
+          
+          writeNetworkConfigFlag = true;
+          sendNetworkConfigFlag = true;
+        }
+        
+        if (doc["new_apName"].is<const char*>())
+        {
+          strlcpy(aConfig.networkConfig.apName,
+            doc["new_apName"],
+            sizeof(aConfig.networkConfig.apName));
+            
+            // uppercase
+            for (uint8_t i = 0; i < sizeof(aConfig.objectConfig.objectName); i++)
+            {
+              aConfig.networkConfig.apName[i] = toupper(aConfig.networkConfig.apName[i]);
+            }
+            
+            // check for unsupported char
+            char const * listeCheck = "ABCDEFGHIJKLMNOPQRSTUVWYXZ0123456789_-";
+            checkCharacter(aConfig.networkConfig.apName, listeCheck, 'A');      
             
             writeNetworkConfigFlag = true;
             sendNetworkConfigFlag = true;
-            
-            // update statut
-            uneFois = true;
           }
           
-          if (doc["new_wifiConnectDelay"].is<unsigned short>())
+          if (doc["new_apPassword"].is<const char*>()) 
           {
-            uint16_t tmpValeur = doc["new_wifiConnectDelay"];
-            aConfig.networkConfig.wifiConnectDelay = checkValeur(tmpValeur, 1, 255);
-            
-            writeNetworkConfigFlag = true;
-            sendNetworkConfigFlag = true;
-          }
-          
-          if (doc["new_disableSsid"].is<unsigned short>())
-          {
-            uint16_t tmpValeur = doc["new_disableSsid"];
-            aConfig.networkConfig.disableSsid = checkValeur(tmpValeur, 0, 1);
-            
-            writeNetworkConfigFlag = true;
-            sendNetworkConfigFlag = true;
-          }
-          
-          if (doc["new_rebootEsp"].is<unsigned short>())
-          {
-            uint16_t tmpValeur = doc["new_rebootEsp"];
-            aConfig.networkConfig.rebootEsp = checkValeur(tmpValeur, 0, 1);
-            
-            writeNetworkConfigFlag = true;
-            sendNetworkConfigFlag = true;
-          }
-          
-          if (doc["new_apName"].is<const char*>())
-          {
-            strlcpy(aConfig.networkConfig.apName,
-              doc["new_apName"],
-              sizeof(aConfig.networkConfig.apName));
-              
-              // uppercase
-              for (uint8_t i = 0; i < sizeof(aConfig.objectConfig.objectName); i++)
-              {
-                aConfig.networkConfig.apName[i] = toupper(aConfig.networkConfig.apName[i]);
-              }
-              
-              // check for unsupported char
-              char const * listeCheck = "ABCDEFGHIJKLMNOPQRSTUVWYXZ0123456789_-";
-              checkCharacter(aConfig.networkConfig.apName, listeCheck, 'A');      
+            strlcpy(  aConfig.networkConfig.apPassword,
+              doc["new_apPassword"],
+              sizeof(aConfig.networkConfig.apPassword));
               
               writeNetworkConfigFlag = true;
               sendNetworkConfigFlag = true;
             }
             
-            if (doc["new_apPassword"].is<const char*>()) 
+            if (doc["new_apIP"].is<const char*>()) 
             {
-              strlcpy(  aConfig.networkConfig.apPassword,
-                doc["new_apPassword"],
-                sizeof(aConfig.networkConfig.apPassword));
+              char newIPchar[16] = "";
+              
+              strlcpy(  newIPchar,
+                doc["new_apIP"],
+                sizeof(newIPchar));
                 
-                writeNetworkConfigFlag = true;
+                IPAddress newIP;
+                if (newIP.fromString(newIPchar))
+                {
+                  Serial.println("valid IP");
+                  aConfig.networkConfig.apIP = newIP;
+                  
+                  writeNetworkConfigFlag = true;
+                }
+                
                 sendNetworkConfigFlag = true;
               }
               
-              if (doc["new_apIP"].is<const char*>()) 
+              if (doc["new_apNetMsk"].is<const char*>()) 
               {
-                char newIPchar[16] = "";
+                char newNMchar[16] = "";
                 
-                strlcpy(  newIPchar,
-                  doc["new_apIP"],
-                  sizeof(newIPchar));
+                strlcpy(  newNMchar,
+                  doc["new_apNetMsk"],
+                  sizeof(newNMchar));
                   
-                  IPAddress newIP;
-                  if (newIP.fromString(newIPchar))
+                  IPAddress newNM;
+                  if (newNM.fromString(newNMchar)) 
                   {
-                    Serial.println("valid IP");
-                    aConfig.networkConfig.apIP = newIP;
+                    Serial.println("valid netmask");
+                    aConfig.networkConfig.apNetMsk = newNM;
                     
                     writeNetworkConfigFlag = true;
                   }
@@ -1080,164 +1104,145 @@ void handleWebsocketBuffer()
                   sendNetworkConfigFlag = true;
                 }
                 
-                if (doc["new_apNetMsk"].is<const char*>()) 
+                // actions sur le esp8266
+                if ( doc["new_restart"].is<unsigned char>() && doc["new_restart"]==1 )
                 {
-                  char newNMchar[16] = "";
-                  
-                  strlcpy(  newNMchar,
-                    doc["new_apNetMsk"],
-                    sizeof(newNMchar));
-                    
-                    IPAddress newNM;
-                    if (newNM.fromString(newNMchar)) 
-                    {
-                      Serial.println("valid netmask");
-                      aConfig.networkConfig.apNetMsk = newNM;
-                      
-                      writeNetworkConfigFlag = true;
-                    }
-                    
-                    sendNetworkConfigFlag = true;
-                  }
-                  
-                  // actions sur le esp8266
-                  if ( doc["new_restart"].is<unsigned char>() && doc["new_restart"]==1 )
-                  {
-                    Serial.println(F("RESTART RESTART RESTART"));
-                    ESP.restart();
-                  }
-                  
-                  if ( doc["new_refresh"].is<unsigned char>() && doc["new_refresh"]==1 )
-                  {
-                    Serial.println(F("REFRESH"));
-                    
-                    sendObjectConfigFlag = true;
-                    sendNetworkConfigFlag = true;
-                  }
-                  
-                  if ( doc["new_defaultObjectConfig"].is<unsigned char>() && doc["new_defaultObjectConfig"]==1 )
-                  {
-                    aConfig.writeDefaultObjectConfig("/config/objectconfig.json");
-                    Serial.println(F("reset to default object config"));
-                    
-                    aFastled.allLedOff();
-                    aFastled.setNbLed(aConfig.objectConfig.activeLeds);          
-                    aFastled.setControlBrightness(aConfig.objectConfig.scintillementOnOff);
-                    aFastled.setIntervalControlBrightness(aConfig.objectConfig.intervalScintillement);
-                    
-                    sendObjectConfigFlag = true;
-                    uneFois = true;
-                  }
-                  
-                  if ( doc["new_defaultNetworkConfig"].is<unsigned char>() && doc["new_defaultNetworkConfig"]==1 )
-                  {
-                    aConfig.writeDefaultNetworkConfig("/config/networkconfig.json");
-                    Serial.println(F("reset to default network config"));          
-                    
-                    sendNetworkConfigFlag = true;
-                  }
-                  
-                  // modif config
-                  // write object config
-                  if (writeObjectConfigFlag)
-                  {
-                    writeObjectConfig();
-                    
-                    // update statut
-                    uneFois = true;
-                  }
-                  
-                  // resend object config
-                  if (sendObjectConfigFlag)
-                  {
-                    sendObjectConfig();
-                  }
-                  
-                  // write network config
-                  if (writeNetworkConfigFlag)
-                  {
-                    writeNetworkConfig();
-                  }
-                  
-                  // resend network config
-                  if (sendNetworkConfigFlag)
-                  {
-                    sendNetworkConfig();
-                  }
+                  Serial.println(F("RESTART RESTART RESTART"));
+                  ESP.restart();
                 }
                 
-                // clear json buffer
-                doc.clear();
-              }
-              
-              void notFound(AsyncWebServerRequest *request)
-              {
-                request->send(404, "text/plain", "Not found");
-              }
-              
-              void convertStrToRGB(const char * source, uint8_t* r, uint8_t* g, uint8_t* b)
-              { 
-                uint32_t  number = (uint32_t) strtol( &source[1], NULL, 16);
+                if ( doc["new_refresh"].is<unsigned char>() && doc["new_refresh"]==1 )
+                {
+                  Serial.println(F("REFRESH"));
+                  
+                  sendObjectConfigFlag = true;
+                  sendNetworkConfigFlag = true;
+                }
                 
-                // Split them up into r, g, b values
-                *r = number >> 16;
-                *g = number >> 8 & 0xFF;
-                *b = number & 0xFF;
-              }
-              
-              void sendMaxLed()
-              {
-                char toSend[20];
-                snprintf(toSend, 20, "{\"maxLed\":%i}", NB_LEDS_MAX);
+                if ( doc["new_defaultObjectConfig"].is<unsigned char>() && doc["new_defaultObjectConfig"]==1 )
+                {
+                  aConfig.writeDefaultObjectConfig("/config/objectconfig.json");
+                  Serial.println(F("reset to default object config"));
+                  
+                  aFastled.allLedOff();
+                  aFastled.setNbLed(aConfig.objectConfig.activeLeds);          
+                  aFastled.setControlBrightness(aConfig.objectConfig.scintillementOnOff);
+                  aFastled.setIntervalControlBrightness(aConfig.objectConfig.intervalScintillement);
+                  
+                  sendObjectConfigFlag = true;
+                  uneFois = true;
+                }
                 
-                ws.textAll(toSend);
-              }
-              
-              void sendUptime()
-              {
-                uint32_t now = millis() / 1000;
-                uint16_t days = now / 86400;
-                uint16_t hours = (now%86400) / 3600;
-                uint16_t minutes = (now%3600) / 60;
-                uint16_t seconds = now % 60;
+                if ( doc["new_defaultNetworkConfig"].is<unsigned char>() && doc["new_defaultNetworkConfig"]==1 )
+                {
+                  aConfig.writeDefaultNetworkConfig("/config/networkconfig.json");
+                  Serial.println(F("reset to default network config"));          
+                  
+                  sendNetworkConfigFlag = true;
+                }
                 
-                char toSend[100];
-                snprintf(toSend, 100, "{\"uptime\":\"%id %ih %im %is\"}", days, hours, minutes, seconds);
+                // modif config
+                // write object config
+                if (writeObjectConfigFlag)
+                {
+                  writeObjectConfig();
+                  
+                  // update statut
+                  uneFois = true;
+                }
                 
-                ws.textAll(toSend);
-              }
-              
-              void sendStatut()
-              {
-                char toSend[100];
-                snprintf(toSend, 100, "{\"statutActuel\":%i}", aConfig.objectConfig.statutActuel); 
+                // resend object config
+                if (sendObjectConfigFlag)
+                {
+                  sendObjectConfig();
+                }
                 
-                ws.textAll(toSend);
+                // write network config
+                if (writeNetworkConfigFlag)
+                {
+                  writeNetworkConfig();
+                }
+                
+                // resend network config
+                if (sendNetworkConfigFlag)
+                {
+                  sendNetworkConfig();
+                }
               }
               
-              void sendObjectConfig()
-              {
-                aConfig.stringJsonFile("/config/objectconfig.json", bufferToSend, BUFFERSENDSIZE);
-                ws.textAll(bufferToSend);
-              }
+              // clear json buffer
+              doc.clear();
+            }
+            
+            void notFound(AsyncWebServerRequest *request)
+            {
+              request->send(404, "text/plain", "Not found");
+            }
+            
+            void convertStrToRGB(const char * source, uint8_t* r, uint8_t* g, uint8_t* b)
+            { 
+              uint32_t  number = (uint32_t) strtol( &source[1], NULL, 16);
               
-              void writeObjectConfig()
-              {
-                aConfig.writeObjectConfig("/config/objectconfig.json");
-              }
+              // Split them up into r, g, b values
+              *r = number >> 16;
+              *g = number >> 8 & 0xFF;
+              *b = number & 0xFF;
+            }
+            
+            void sendMaxLed()
+            {
+              char toSend[20];
+              snprintf(toSend, 20, "{\"maxLed\":%i}", NB_LEDS_MAX);
               
-              void sendNetworkConfig()
-              {
-                aConfig.stringJsonFile("/config/networkconfig.json", bufferToSend, BUFFERSENDSIZE);
-                ws.textAll(bufferToSend);
-              }
+              ws.textAll(toSend);
+            }
+            
+            void sendUptime()
+            {
+              uint32_t now = millis() / 1000;
+              uint16_t days = now / 86400;
+              uint16_t hours = (now%86400) / 3600;
+              uint16_t minutes = (now%3600) / 60;
+              uint16_t seconds = now % 60;
               
-              void writeNetworkConfig()
-              {
-                aConfig.writeNetworkConfig("/config/networkconfig.json");
-              }
-              /*
-              ----------------------------------------------------------------------------
-              FIN DES FONCTIONS ADDITIONNELLES
-              ----------------------------------------------------------------------------
-              */
+              char toSend[100];
+              snprintf(toSend, 100, "{\"uptime\":\"%id %ih %im %is\"}", days, hours, minutes, seconds);
+              
+              ws.textAll(toSend);
+            }
+            
+            void sendStatut()
+            {
+              char toSend[100];
+              snprintf(toSend, 100, "{\"statutActuel\":%i}", aConfig.objectConfig.statutActuel); 
+              
+              ws.textAll(toSend);
+            }
+            
+            void sendObjectConfig()
+            {
+              aConfig.stringJsonFile("/config/objectconfig.json", bufferToSend, BUFFERSENDSIZE);
+              ws.textAll(bufferToSend);
+            }
+            
+            void writeObjectConfig()
+            {
+              aConfig.writeObjectConfig("/config/objectconfig.json");
+            }
+            
+            void sendNetworkConfig()
+            {
+              aConfig.stringJsonFile("/config/networkconfig.json", bufferToSend, BUFFERSENDSIZE);
+              ws.textAll(bufferToSend);
+            }
+            
+            void writeNetworkConfig()
+            {
+              aConfig.writeNetworkConfig("/config/networkconfig.json");
+            }
+            /*
+            ----------------------------------------------------------------------------
+            FIN DES FONCTIONS ADDITIONNELLES
+            ----------------------------------------------------------------------------
+            */
+            
